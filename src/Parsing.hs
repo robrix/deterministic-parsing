@@ -47,11 +47,13 @@ instance Symbol s => Applicative (Parser s) where
             = fmap (\ p state noskip -> do
               (f, state') <- p state (f2 : noskip)
               (a, state'') <- choose n2 t2 state' noskip
-              pure (f a, state'')) t1
+              let fa = f a
+              fa `seq` pure (fa, state'')) t1
             <> case n1 of
               Just f -> fmap (\ q state noskip -> do
                 (a, state') <- q state noskip
-                pure (f a, state')) t2
+                let fa = f a
+                fa `seq` pure (fa, state')) t2
               _ -> mempty
           combine (Just _) s1 s2 = s1 <> s2
           combine _        s1 _  = s1
