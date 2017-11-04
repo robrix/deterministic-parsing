@@ -28,12 +28,11 @@ type ParserCont s a r = State s -> Success s a r -> Failure s a r -> r
 newtype Table s a = Table { tableBranches :: Map.Map s a }
   deriving (Eq, Foldable, Functor, Monoid, Ord, Semigroup, Show, Traversable)
 
-data Parser s a
-  = Parser
-    { parserNull :: Maybe a
-    , parserFirst :: Set.Set s
-    , parserTable :: forall r . [(s, ParserCont s a r)]
-    }
+data Parser s a = Parser
+  { parserNull :: Maybe a
+  , parserFirst :: Set.Set s
+  , parserTable :: forall r . [(s, ParserCont s a r)]
+  }
 
 parse :: Symbol s => Parser s a -> [s] -> Result a
 parse (Parser e _ table) input = do
