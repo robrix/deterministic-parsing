@@ -3,10 +3,12 @@ module Parsing where
 
 import Control.Applicative
 import Data.Bifunctor (first)
+import Data.Char
+import Data.Foldable
 import qualified Data.Map as Map
 import Data.List (union)
 import Data.Semigroup
-import Prelude hiding (fail)
+import Text.Parser.Combinators
 
 type Symbol s = (Ord s, Show s)
 
@@ -79,3 +81,22 @@ symbol :: s -> Parser s s
 symbol s = Parser False [s] (Table (Map.singleton s (\ inp _ -> case inp of
   []      -> Left "unexpected eof"
   (_:inp) -> Right (s, inp))) Nothing)
+
+
+data Expr = Lit Integer | Expr :+ Expr | Expr :* Expr
+  deriving (Eq, Ord, Show)
+
+lit :: Parser Char Expr
+lit = Lit . fst . foldr (\ d (v, p) -> (d * p + v, p * 10)) (0, 1) <$> some (asum (map (fmap (fromIntegral . digitToInt) . symbol) ['0'..'9']))
+
+parens :: Parser Char a -> Parser Char a
+parens a = symbol '(' *> a <* symbol ')'
+
+expr :: Parser Char Expr
+expr = term `chainl1` ((:+) <$ symbol '+')
+
+term :: Parser Char Expr
+term = factor `chainl1` ((:*) <$ symbol '*')
+
+factor :: Parser Char Expr
+factor = parens expr <|> lit
