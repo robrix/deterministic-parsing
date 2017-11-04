@@ -17,7 +17,8 @@ type Symbol s = (Ord s, Show s)
 type State s = [s]
 type Noskip s = [Set.Set s]
 
-type ParserCont s a = State s -> Noskip s -> Either String (a, State s)
+type Error = String
+type ParserCont s a = State s -> Noskip s -> Either Error (a, State s)
 
 newtype Table s a = Table { tableBranches :: Map.Map s a }
   deriving (Eq, Foldable, Functor, Monoid, Ord, Semigroup, Show, Traversable)
@@ -29,7 +30,7 @@ data Parser s a
     , parserTable :: Table s (ParserCont s a)
     }
 
-parse :: Symbol s => Parser s a -> State s -> Either String a
+parse :: Symbol s => Parser s a -> State s -> Either Error a
 parse (Parser e _ table) state = do
   (a, rest) <- choose e table state []
   case rest of
