@@ -18,7 +18,8 @@ type State s = [s]
 type Noskip s = [Set.Set s]
 
 type Error = String
-type ParserCont s a = State s -> Noskip s -> Either Error (a, State s)
+type Result = Either Error
+type ParserCont s a = State s -> Noskip s -> Result (a, State s)
 
 newtype Table s a = Table { tableBranches :: Map.Map s a }
   deriving (Eq, Foldable, Functor, Monoid, Ord, Semigroup, Show, Traversable)
@@ -30,7 +31,7 @@ data Parser s a
     , parserTable :: Table s (ParserCont s a)
     }
 
-parse :: Symbol s => Parser s a -> State s -> Either Error a
+parse :: Symbol s => Parser s a -> State s -> Result a
 parse (Parser e _ table) state = do
   (a, rest) <- choose e table state []
   case rest of
