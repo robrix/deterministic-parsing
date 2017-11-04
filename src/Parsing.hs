@@ -60,13 +60,15 @@ instance Symbol s => Applicative (Parser s) where
           combine _        s1 _  = s1
 
 choose :: Symbol s => Maybe a -> Table s (ParserCont s a r) -> ParserCont s a r
-choose (Just a) _         []     _      yield _   = yield a []
-choose _        _         []     _      _     err = err "no rule to match at end" []
-choose nullible (Table b) (c:cs) noskip yield err = fromMaybe notFound (Map.lookup c b) (c:cs) noskip yield err
-  where notFound _ _ _ _
-          | Just a <- nullible
-          , any (c `Set.member`) noskip = yield a (c:cs)
-          | otherwise                   = err ("expected " ++ expected ++ " but got " ++ show c) (c:cs)
+choose nullible (Table b) = go
+  where go [] _ yield err
+          | Just a <- nullible = yield a []
+          | otherwise          = err ("expected " ++ expected ++ " at end") []
+        go (c:cs) noskip yield err = fromMaybe notFound (Map.lookup c b) (c:cs) noskip yield err
+          where notFound _ _ _ _
+                  | Just a <- nullible
+                  , any (c `Set.member`) noskip = yield a (c:cs)
+                  | otherwise                   = err ("expected " ++ expected ++ " but got " ++ show c) (c:cs)
         expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
 
 instance Symbol s => Alternative (Parser s) where
