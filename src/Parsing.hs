@@ -23,8 +23,8 @@ type ParserCont s a = Input s -> Follow s -> Either String (a, Input s)
 
 data Parser s a = Parser { parserNullible :: Bool, parserFirst :: [s], runParser :: ParserCont s a }
 
-invokeParser :: Symbol s => Parser s a -> Input s -> Either String a
-invokeParser (Parser _ _ p) inp = case p inp [] of
+parse :: Symbol s => Parser s a -> Input s -> Either String a
+parse (Parser _ _ p) inp = case p inp [] of
   Left s        -> Left s
   Right (a, []) -> Right a
   Right _       -> Left "no rule to match at eof"
