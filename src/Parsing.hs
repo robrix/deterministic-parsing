@@ -14,7 +14,9 @@ import Text.Parser.Combinators
 
 type Symbol s = (Ord s, Show s)
 
-type State s = [s]
+data State s = State
+  { stateInput :: ![s]
+  }
 type Noskip s = [Set.Set s]
 
 type Error = String
@@ -36,9 +38,9 @@ data Parser s a
 parse :: Symbol s => Parser s a -> State s -> Result a
 parse (Parser e _ table) state = do
   (a, rest) <- choose e (Table (Map.fromList table)) state [] (curry Right) (const . Left)
-  case rest of
-    [] -> Right a
-    _ -> Left "no rule to match at end"
+  case stateInput rest of
+    []  -> Right a
+    c:_ -> Left ("expected end but got " ++ show c)
 
 instance Functor (Parser s) where
   fmap g (Parser n f table) = Parser (fmap g n) f (fmap (second (\ cont state noskip yield -> cont state noskip (yield . g))) table)
@@ -63,14 +65,12 @@ instance Symbol s => Applicative (Parser s) where
 
 choose :: Symbol s => Maybe a -> Table s (ParserCont s a r) -> ParserCont s a r
 choose nullible (Table b) = go
-  where go [] _ yield err
-          | Just a <- nullible = yield a []
-          | otherwise          = err ("expected " ++ expected ++ " at end") []
-        go (c:cs) noskip yield err = fromMaybe notFound (Map.lookup c b) (c:cs) noskip yield err
-          where notFound _ _ _ _
-                  | Just a <- nullible
-                  , any (c `Set.member`) noskip = yield a (c:cs)
-                  | otherwise                   = err ("expected " ++ expected ++ " but got " ++ show c) (c:cs)
+  where go state noskip yield err = case stateInput state of
+          []  -> maybe (err ("expected " ++ expected ++ " at end")) yield nullible state
+          c:_ -> fromMaybe (notFound c) (Map.lookup c b) state noskip yield err
+        notFound c state noskip yield err = case nullible of
+          Just a | any (c `Set.member`) noskip -> yield a state
+          _                                    -> err ("expected " ++ expected ++ " but got " ++ show c) state
         expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
 
 instance Symbol s => Alternative (Parser s) where
@@ -79,9 +79,9 @@ instance Symbol s => Alternative (Parser s) where
   Parser n1 f1 t1 <|> Parser n2 f2 t2 = Parser (n1 <|> n2) (f1 <> f2) (t1 <> t2)
 
 symbol :: s -> Parser s s
-symbol s = Parser Nothing (Set.singleton s) [(s, \ inp _ yield err -> case inp of
-  []     -> err "unexpected eof" []
-  _:rest -> yield s rest)]
+symbol s = Parser Nothing (Set.singleton s) [(s, \ state _ yield err -> case stateInput state of
+  []     -> err "unexpected eof" state
+  _:rest -> yield s (state { stateInput = rest }))]
 
 
 data Expr = Lit Integer | Expr :+ Expr | Expr :* Expr
