@@ -19,7 +19,6 @@ data State s = State
   , stateFollow :: ![Set.Set s]
   }
 
-type Error = String
 type Result = Either Error
 type Success s a r = a -> State s -> r
 type Failure s a r = Error -> State s -> r
@@ -34,12 +33,15 @@ data Parser s a = Parser
   , parserTable :: forall r . [(s, ParserCont s a r)]
   }
 
+newtype Error = Error String
+  deriving (Eq, Ord, Show)
+
 parse :: Symbol s => Parser s a -> [s] -> Result a
 parse (Parser e _ table) input = do
   (a, rest) <- choose e (Table (Map.fromList table)) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
-    c:_ -> Left ("expected end but got " ++ show c)
+    c:_ -> Left (Error ("expected end but got " ++ show c))
 
 instance Functor (Parser s) where
   fmap g (Parser n f table) = Parser (fmap g n) f (fmap (second (\ cont state yield -> cont state (yield . g))) table)
@@ -65,11 +67,11 @@ instance Symbol s => Applicative (Parser s) where
 choose :: Symbol s => Maybe a -> Table s (ParserCont s a r) -> ParserCont s a r
 choose nullible (Table b) = go
   where go state yield err = case stateInput state of
-          []  -> maybe (err ("expected " ++ expected ++ " at end")) yield nullible state
+          []  -> maybe (err (Error ("expected " ++ expected ++ " at end"))) yield nullible state
           c:_ -> fromMaybe (notFound c) (Map.lookup c b) state yield err
         notFound c state yield err = case nullible of
           Just a | any (c `Set.member`) (stateFollow state) -> yield a state
-          _                                                 -> err ("expected " ++ expected ++ " but got " ++ show c) state
+          _                                                 -> err (Error ("expected " ++ expected ++ " but got " ++ show c)) state
         expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
 
 instance Symbol s => Alternative (Parser s) where
@@ -79,7 +81,7 @@ instance Symbol s => Alternative (Parser s) where
 
 symbol :: s -> Parser s s
 symbol s = Parser Nothing (Set.singleton s) [(s, \ state yield err -> case stateInput state of
-  []     -> err "unexpected eof" state
+  []     -> err (Error "unexpected eof") state
   _:rest -> yield s (state { stateInput = rest }))]
 
 
