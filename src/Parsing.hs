@@ -87,6 +87,17 @@ instance Symbol s => Alternative (Parser s) where
 
   Parser n1 f1 l1 t1 <|> Parser n2 f2 l2 t2 = Parser (n1 <|> n2) (f1 <> f2) (l1 <> l2) (t1 <> t2)
 
+instance Symbol s => Parsing (Parser s) where
+  try = id
+
+  p <?> label = p { parserLabels = Set.singleton (Left label) }
+
+  unexpected s = Parser Nothing mempty mempty mempty
+
+  eof = Parser (Just ()) mempty mempty mempty <?> "eof"
+
+  notFollowedBy wrong = Parser (Just ()) mempty mempty mempty
+
 symbol :: s -> Parser s s
 symbol s = Parser Nothing (Set.singleton s) (Set.singleton (Right s)) [(s, \ state yield err -> case stateInput state of
   []     -> err (Error (Set.singleton (Right s)) Nothing) state
