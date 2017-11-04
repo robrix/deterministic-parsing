@@ -35,19 +35,20 @@ data Parser s a = Parser
 
 data Error s = Error
   { errorExpected :: Set.Set s
+  , errorExpectedMessage :: Maybe String
   , errorActual :: Maybe s
   }
   deriving (Eq, Ord, Show)
 
 formatError :: Symbol s => Error s -> String
-formatError (Error expected actual) = "expected (" ++ intercalate ", " (map show (Set.toList expected)) ++ ") " ++ maybe "at end" (("but got " ++) . show) actual
+formatError (Error expected expectedMessage actual) = "expected " ++ fromMaybe ("(" ++ intercalate ", " (map show (Set.toList expected)) ++ ")") expectedMessage ++ " " ++ maybe "at end" (("but got " ++) . show) actual
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ table) input = do
   (a, rest) <- choose e (Table (Map.fromList table)) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
-    c:_ -> Left (Error mempty (Just c))
+    c:_ -> Left (Error mempty Nothing (Just c))
 
 instance Functor (Parser s) where
   fmap g (Parser n f table) = Parser (fmap g n) f (fmap (second (\ cont state yield -> cont state (yield . g))) table)
@@ -73,11 +74,11 @@ instance Symbol s => Applicative (Parser s) where
 choose :: Symbol s => Maybe a -> Table s (ParserCont s a r) -> ParserCont s a r
 choose nullible (Table b) = go
   where go state yield err = case stateInput state of
-          []  -> maybe (err (Error (Map.keysSet b) Nothing)) yield nullible state
+          []  -> maybe (err (Error (Map.keysSet b) Nothing Nothing)) yield nullible state
           c:_ -> fromMaybe (notFound c) (Map.lookup c b) state yield err
         notFound c state yield err = case nullible of
           Just a | any (c `Set.member`) (stateFollow state) -> yield a state
-          _                                                 -> err (Error (Map.keysSet b) (Just c)) state
+          _                                                 -> err (Error (Map.keysSet b) Nothing (Just c)) state
 
 instance Symbol s => Alternative (Parser s) where
   empty = Parser Nothing mempty mempty
@@ -86,7 +87,7 @@ instance Symbol s => Alternative (Parser s) where
 
 symbol :: s -> Parser s s
 symbol s = Parser Nothing (Set.singleton s) [(s, \ state yield err -> case stateInput state of
-  []     -> err (Error (Set.singleton s) Nothing) state
+  []     -> err (Error (Set.singleton s) Nothing Nothing) state
   _:rest -> yield s (state { stateInput = rest }))]
 
 
