@@ -62,8 +62,8 @@ choose _        _         []     _      = Left "no rule to match at end"
 choose nullible (Table b) (c:cs) noskip = fromMaybe notFound (Map.lookup c b) (c:cs) noskip
   where notFound _ _
           | Just a <- nullible
-          , any (c `elem`) noskip = Right (a, c:cs)
-          | otherwise             = Left ("expected " ++ expected ++ " but got " ++ show c)
+          , any (c `Set.member`) noskip = Right (a, c:cs)
+          | otherwise                   = Left ("expected " ++ expected ++ " but got " ++ show c)
         expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
 
 instance Symbol s => Alternative (Parser s) where
