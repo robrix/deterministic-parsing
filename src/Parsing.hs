@@ -114,10 +114,10 @@ parens :: Parser Char a -> Parser Char a
 parens a = symbol '(' *> a <* symbol ')' <?> "parens"
 
 expr :: Parser Char Expr
-expr = term `chainl1` ((:+) <$ symbol '+')
+expr = term `chainl1` ((:+) <$ symbol '+') <?> "expr"
 
 term :: Parser Char Expr
-term = factor `chainl1` ((:*) <$ symbol '*')
+term = factor `chainl1` ((:*) <$ symbol '*') <?> "term"
 
 factor :: Parser Char Expr
 factor = parens expr <|> lit
