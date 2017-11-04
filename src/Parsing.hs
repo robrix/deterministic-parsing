@@ -66,7 +66,7 @@ instance Symbol s => Applicative (Parser s) where
 choose :: Symbol s => Table s (ParserCont s a) -> ParserCont s a
 choose (Table _ (Just a)) [] follow = a [] follow
 choose (Table _ Nothing) [] _ = Left "no rule to match at end"
-choose (Table b e) (c:cs) follow = case Map.lookup c b of
+choose (Table b _) (c:cs) follow = case Map.lookup c b of
   Just cont -> cont (c:cs) follow
 
 instance Symbol s => Alternative (Parser s) where
