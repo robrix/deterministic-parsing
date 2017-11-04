@@ -40,7 +40,7 @@ data Error s = Error
   deriving (Eq, Ord, Show)
 
 formatError :: Symbol s => Error s -> String
-formatError (Error expected actual) = " expected (" ++ intercalate ", " (map show (Set.toList expected)) ++ ") " ++ maybe "at end" (("but got" ++) . show) actual
+formatError (Error expected actual) = "expected (" ++ intercalate ", " (map show (Set.toList expected)) ++ ") " ++ maybe "at end" (("but got" ++) . show) actual
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ table) input = do
