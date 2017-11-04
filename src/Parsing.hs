@@ -21,10 +21,6 @@ type Follow s = [s]
 
 type ParserCont s a = Input s -> Follow s -> Either String (a, Input s)
 
-psymbol :: Symbol s => s -> ParserCont s s
-psymbol s []      _ = Left "unexpected eof"
-psymbol s (_:inp) _ = Right (s, inp)
-
 data Parser s a = Parser { parserNullible :: Bool, parserFirst :: [s], runParser :: ParserCont s a }
 
 invokeParser :: Symbol s => Parser s a -> Input s -> Either String a
@@ -63,4 +59,6 @@ instance Symbol s => Alternative (Parser s) where
                     | otherwise           = Left ("unrecognized symbol " ++ show s)
 
 instance Symbol s => Parsing s (Parser s) where
-  symbol s = Parser False [s] (psymbol s)
+  symbol s = Parser False [s] (\ inp _ -> case inp of
+    []      -> Left "unexpected eof"
+    (_:inp) -> Right (s, inp))
