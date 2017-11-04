@@ -68,6 +68,7 @@ choose (Table _ (Just a)) [] follow = a [] follow
 choose (Table _ Nothing) [] _ = Left "no rule to match at end"
 choose (Table b _) (c:cs) follow = case Map.lookup c b of
   Just cont -> cont (c:cs) follow
+  _ -> Left ("no rule to match " ++ show c)
 
 instance Symbol s => Alternative (Parser s) where
   empty = Parser True [] (Table mempty Nothing)
