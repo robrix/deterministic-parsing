@@ -6,7 +6,7 @@ import Data.Bifunctor (first)
 import Data.Char
 import Data.Foldable
 import qualified Data.Map as Map
-import Data.List (union)
+import Data.List (intercalate, union)
 import Data.Semigroup
 import Text.Parser.Combinators
 
@@ -59,7 +59,8 @@ choose (Just a) _         []     _      = Right (a, [])
 choose _        _         []     _      = Left "no rule to match at end"
 choose _        (Table b) (c:cs) follow = case Map.lookup c b of
   Just cont -> cont (c:cs) follow
-  _ -> Left ("no rule to match " ++ show c)
+  _ -> Left ("expected " ++ expected ++ " but got " ++ show c)
+  where expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
 
 instance Symbol s => Alternative (Parser s) where
   empty = Parser Nothing [] (Table mempty)
