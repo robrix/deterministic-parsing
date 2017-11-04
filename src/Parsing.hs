@@ -33,8 +33,7 @@ instance Symbol s => Applicative (Parser s) where
 
   Parser n1 f1 p1 <*> ~(Parser n2 f2 p2) = Parser (n1 && n2) (combine n1 f1 f2) (p1 `pseq` p2)
     where p1 `pseq` p2 = \ inp follow -> do
-            let comb = combine n2
-            (v1, inp1) <- p1 inp (f2 `comb` follow)
+            (v1, inp1) <- p1 inp (combine n2 f2 follow)
             (v2, inp2) <- p2 inp1 follow
             pure (v1 v2, inp2)
           combine e s1 s2 = s1 `union` if e then s2 else []
