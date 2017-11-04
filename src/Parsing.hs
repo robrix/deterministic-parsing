@@ -22,7 +22,7 @@ type Follow s = [s]
 type DetCont s a = Input s -> Follow s -> Either String (a, Input s)
 
 ppure :: a -> DetCont s a
-ppure a = \ i _ -> Right (a, i)
+ppure a i _ = Right (a, i)
 
 psymbol :: Symbol s => s -> DetCont s s
 psymbol s []      _ = Left "unexpected eof"
@@ -40,7 +40,7 @@ instance Functor (Det s) where
   fmap g (Det n f cont) = Det n f (fmap (fmap (first g)) . cont)
 
 instance Symbol s => Applicative (Det s) where
-  pure a = Det True [] (ppure a)
+  pure = Det True [] . ppure
 
   Det n1 f1 p1 <*> ~(Det n2 f2 p2) = Det (n1 && n2) (combine n1 f1 f2) (p1 `pseq` p2)
     where p1 `pseq` p2 = \ inp follow -> do
