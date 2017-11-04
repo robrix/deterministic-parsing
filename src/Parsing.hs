@@ -57,8 +57,8 @@ instance Symbol s => Applicative (Parser s) where
 choose :: Symbol s => Maybe a -> Table s (ParserCont s a) -> ParserCont s a
 choose (Just a) _         []     _      = Right (a, [])
 choose _        _         []     _      = Left "no rule to match at end"
-choose _        (Table b) (c:cs) follow = case Map.lookup c b of
-  Just cont -> cont (c:cs) follow
+choose _        (Table b) (c:cs) noskip = case Map.lookup c b of
+  Just cont -> cont (c:cs) noskip
   _ -> Left ("expected " ++ expected ++ " but got " ++ show c)
   where expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
 
