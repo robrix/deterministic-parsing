@@ -19,6 +19,8 @@ type Noskip s = [Set.Set s]
 
 type Error = String
 type Result = Either Error
+type Success s a r = a -> State s -> r
+type Failure s a r = Error -> State s -> r
 type ParserCont s a = State s -> Noskip s -> Result (a, State s)
 
 newtype Table s a = Table { tableBranches :: Map.Map s a }
