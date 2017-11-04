@@ -6,6 +6,7 @@ import Data.Bifunctor (first)
 import Data.Char
 import Data.Foldable
 import qualified Data.Map as Map
+import Data.Maybe (fromMaybe)
 import Data.List (intercalate, union)
 import Data.Semigroup
 import Text.Parser.Combinators
@@ -57,10 +58,12 @@ instance Symbol s => Applicative (Parser s) where
 choose :: Symbol s => Maybe a -> Table s (ParserCont s a) -> ParserCont s a
 choose (Just a) _         []     _      = Right (a, [])
 choose _        _         []     _      = Left "no rule to match at end"
-choose _        (Table b) (c:cs) noskip = case Map.lookup c b of
-  Just cont -> cont (c:cs) noskip
-  _ -> Left ("expected " ++ expected ++ " but got " ++ show c)
-  where expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
+choose nullible (Table b) (c:cs) noskip = fromMaybe notFound (Map.lookup c b) (c:cs) noskip
+  where notFound _ _
+          | Just a <- nullible
+          , any (c `elem`) noskip = Right (a, c:cs)
+          | otherwise             = Left ("expected " ++ expected ++ " but got " ++ show c)
+        expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
 
 instance Symbol s => Alternative (Parser s) where
   empty = Parser Nothing [] (Table mempty)
