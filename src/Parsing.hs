@@ -55,9 +55,9 @@ instance Symbol s => Applicative (Parser s) where
           combine _        s1 _  = s1
 
 choose :: Symbol s => Maybe a -> Table s (ParserCont s a) -> ParserCont s a
-choose (Just a) _ [] _ = Right (a, [])
-choose _ _ [] _ = Left "no rule to match at end"
-choose _ (Table b) (c:cs) follow = case Map.lookup c b of
+choose (Just a) _         []     _      = Right (a, [])
+choose _        _         []     _      = Left "no rule to match at end"
+choose _        (Table b) (c:cs) follow = case Map.lookup c b of
   Just cont -> cont (c:cs) follow
   _ -> Left ("no rule to match " ++ show c)
 
