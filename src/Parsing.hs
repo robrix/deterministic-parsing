@@ -6,15 +6,16 @@ import Data.Bifunctor (first)
 import Data.Char
 import Data.Foldable
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import Data.Maybe (fromMaybe)
-import Data.List (intercalate, union)
+import Data.List (intercalate)
 import Data.Semigroup
 import Text.Parser.Combinators
 
 type Symbol s = (Ord s, Show s)
 
 type State s = [s]
-type Noskip s = [[s]]
+type Noskip s = [Set.Set s]
 
 type ParserCont s a = State s -> Noskip s -> Either String (a, State s)
 
@@ -24,7 +25,7 @@ newtype Table s a = Table { tableBranches :: Map.Map s a }
 data Parser s a
   = Parser
     { parserNull :: Maybe a
-    , parserFirst :: [s]
+    , parserFirst :: Set.Set s
     , parserTable :: Table s (ParserCont s a)
     }
 
@@ -39,7 +40,7 @@ instance Functor (Parser s) where
   fmap g (Parser n f table) = Parser (fmap g n) f (fmap (fmap (fmap (first g)) .) table)
 
 instance Symbol s => Applicative (Parser s) where
-  pure a = Parser (Just a) [] (Table mempty)
+  pure a = Parser (Just a) mempty mempty
 
   Parser n1 f1 t1 <*> ~(Parser n2 f2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (t1 `tseq` t2)
     where t1 `tseq` t2
@@ -52,7 +53,7 @@ instance Symbol s => Applicative (Parser s) where
                 (a, state') <- q state noskip
                 pure (f a, state')) t2
               _ -> mempty
-          combine (Just _) s1 s2 = s1 `union` s2
+          combine (Just _) s1 s2 = s1 <> s2
           combine _        s1 _  = s1
 
 choose :: Symbol s => Maybe a -> Table s (ParserCont s a) -> ParserCont s a
@@ -66,12 +67,12 @@ choose nullible (Table b) (c:cs) noskip = fromMaybe notFound (Map.lookup c b) (c
         expected = "(" ++ intercalate ", " (map show (Map.keys b)) ++ ")"
 
 instance Symbol s => Alternative (Parser s) where
-  empty = Parser Nothing [] (Table mempty)
+  empty = Parser Nothing mempty mempty
 
   Parser n1 f1 t1 <|> Parser n2 f2 t2 = Parser (n1 <|> n2) (f1 <> f2) (t1 <> t2)
 
 symbol :: s -> Parser s s
-symbol s = Parser Nothing [s] (Table (Map.singleton s (\ inp _ -> case inp of
+symbol s = Parser Nothing (Set.singleton s) (Table (Map.singleton s (\ inp _ -> case inp of
   []      -> Left "unexpected eof"
   (_:inp) -> Right (s, inp))))
 
