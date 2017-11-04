@@ -13,10 +13,10 @@ import Text.Parser.Combinators
 
 type Symbol s = (Ord s, Show s)
 
-type Input s = [s]
+type State s = [s]
 type Noskip s = [[s]]
 
-type ParserCont s a = Input s -> Noskip s -> Either String (a, Input s)
+type ParserCont s a = State s -> Noskip s -> Either String (a, State s)
 
 newtype Table s a = Table { tableBranches :: Map.Map s a }
   deriving (Eq, Foldable, Functor, Monoid, Ord, Semigroup, Show, Traversable)
@@ -28,9 +28,9 @@ data Parser s a
     , parserTable :: Table s (ParserCont s a)
     }
 
-parse :: Symbol s => Parser s a -> Input s -> Either String a
-parse (Parser e _ table) input = do
-  (a, rest) <- choose e table input []
+parse :: Symbol s => Parser s a -> State s -> Either String a
+parse (Parser e _ table) state = do
+  (a, rest) <- choose e table state []
   case rest of
     [] -> Right a
     _ -> Left "no rule to match at end"
@@ -43,14 +43,14 @@ instance Symbol s => Applicative (Parser s) where
 
   Parser n1 f1 t1 <*> ~(Parser n2 f2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (t1 `tseq` t2)
     where t1 `tseq` t2
-            = fmap (\ p input noskip -> do
-              (f, input') <- p input (f2 : noskip)
-              (a, input'') <- choose n2 t2 input' noskip
-              pure (f a, input'')) t1
+            = fmap (\ p state noskip -> do
+              (f, state') <- p state (f2 : noskip)
+              (a, state'') <- choose n2 t2 state' noskip
+              pure (f a, state'')) t1
             <> case n1 of
-              Just f -> fmap (\ q input noskip -> do
-                (a, input') <- q input noskip
-                pure (f a, input')) t2
+              Just f -> fmap (\ q state noskip -> do
+                (a, state') <- q state noskip
+                pure (f a, state')) t2
               _ -> mempty
           combine (Just _) s1 s2 = s1 `union` s2
           combine _        s1 _  = s1
