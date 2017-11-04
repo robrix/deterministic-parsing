@@ -10,9 +10,6 @@ import Prelude hiding (fail)
 
 type Symbol s = (Ord s, Show s)
 
-class (Alternative p, Symbol s) => Parsing s p | p -> s where
-  symbol :: s -> p s
-
 type Input s = [s]
 type Noskip s = [[s]]
 
@@ -77,7 +74,7 @@ instance Symbol s => Alternative (Parser s) where
 
   Parser n1 f1 t1 <|> Parser n2 f2 t2 = Parser (n1 || n2) (f1 <> f2) (t1 <> t2)
 
-instance Symbol s => Parsing s (Parser s) where
-  symbol s = Parser False [s] (Table (Map.singleton s (\ inp _ -> case inp of
-    []      -> Left "unexpected eof"
-    (_:inp) -> Right (s, inp))) Nothing)
+symbol :: s -> Parser s s
+symbol s = Parser False [s] (Table (Map.singleton s (\ inp _ -> case inp of
+  []      -> Left "unexpected eof"
+  (_:inp) -> Right (s, inp))) Nothing)
