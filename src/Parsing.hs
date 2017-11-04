@@ -30,63 +30,66 @@ newtype Table s a = Table { tableBranches :: Map.Map s a }
 data Parser s a = Parser
   { parserNull :: Maybe a
   , parserFirst :: Set.Set s
+  , parserLabels :: Set.Set (Either String s)
   , parserTable :: forall r . [(s, ParserCont s a r)]
   }
 
 data Error s = Error
-  { errorExpected :: Set.Set s
+  { errorExpected :: Set.Set (Either String s)
   , errorActual :: Maybe s
   }
   deriving (Eq, Ord, Show)
 
 formatError :: Symbol s => Error s -> String
-formatError (Error expected actual) = "expected (" ++ intercalate ", " (map show (Set.toList expected)) ++ ") " ++ maybe "at end" (("but got " ++) . show) actual
+formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (either id show) (Set.toList expected)) ++ ") " ++ maybe "at end" (("but got " ++) . show) actual
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
-parse (Parser e _ table) input = do
-  (a, rest) <- choose e (Table (Map.fromList table)) (State input []) (curry Right) (const . Left)
+parse (Parser e _ labels table) input = do
+  (a, rest) <- choose e labels (Table (Map.fromList table)) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
     c:_ -> Left (Error mempty (Just c))
 
 instance Functor (Parser s) where
-  fmap g (Parser n f table) = Parser (fmap g n) f (fmap (second (\ cont state yield -> cont state (yield . g))) table)
+  fmap g (Parser n f l table) = Parser (fmap g n) f l (fmap (second (\ cont state yield -> cont state (yield . g))) table)
 
 instance Symbol s => Applicative (Parser s) where
-  pure a = Parser (Just a) mempty mempty
+  pure a = Parser (Just a) mempty mempty mempty
 
-  Parser n1 f1 t1 <*> ~(Parser n2 f2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (t1 `tseq` t2)
+  Parser n1 f1 l1 t1 <*> ~(Parser n2 f2 l2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (combine n1 l1 l2) (t1 `tseq` t2)
     where table2 = Table (Map.fromList t2)
           t1 `tseq` t2
             = fmap (second (\ p state yield err ->
               p state { stateFollow = f2 : stateFollow state } (\ f state' ->
-                choose n2 table2 state' (\ a state'' ->
+                choose n2 l2 table2 state' (\ a state'' ->
                   let fa = f a in fa `seq` yield fa state'') err) err)) t1
             <> case n1 of
               Just f -> fmap (second (\ q state yield err ->
                 q state (\ a state' ->
                   let fa = f a in fa `seq` yield fa state') err)) t2
               _ -> mempty
-          combine (Just _) s1 s2 = s1 <> s2
-          combine _        s1 _  = s1
 
-choose :: Symbol s => Maybe a -> Table s (ParserCont s a r) -> ParserCont s a r
-choose nullible (Table b) = go
+combine :: Ord b => Maybe a -> Set.Set b -> Set.Set b -> Set.Set b
+combine (Just _) s1 s2 = s1 <> s2
+combine _        s1 _  = s1
+
+choose :: Symbol s => Maybe a -> Set.Set (Either String s) -> Table s (ParserCont s a r) -> ParserCont s a r
+choose nullible labels (Table b) = go
   where go state yield err = case stateInput state of
-          []  -> maybe (err (Error (Map.keysSet b) Nothing)) yield nullible state
+          []  -> maybe (err (Error labels Nothing)) yield nullible state
           c:_ -> fromMaybe (notFound c) (Map.lookup c b) state yield err
         notFound c state yield err = case nullible of
           Just a | any (c `Set.member`) (stateFollow state) -> yield a state
-          _                                                 -> err (Error (Map.keysSet b) (Just c)) state
+          _                                                 -> err (Error labels (Just c)) state
 
 instance Symbol s => Alternative (Parser s) where
-  empty = Parser Nothing mempty mempty
+  empty = Parser Nothing mempty mempty mempty
 
-  Parser n1 f1 t1 <|> Parser n2 f2 t2 = Parser (n1 <|> n2) (f1 <> f2) (t1 <> t2)
+  Parser n1 f1 l1 t1 <|> Parser n2 f2 l2 t2 = Parser (n1 <|> n2) (f1 <> f2) (l1 <> l2) (t1 <> t2)
 
 symbol :: s -> Parser s s
-symbol s = Parser Nothing (Set.singleton s) [(s, \ state yield err -> case stateInput state of
-  []     -> err (Error (Set.singleton s) Nothing) state
+symbol s = Parser Nothing (Set.singleton s) (Set.singleton (Right s)) [(s, \ state yield err -> case stateInput state of
+  []     -> err (Error (Set.singleton (Right s)) Nothing) state
   _:rest -> yield s (state { stateInput = rest }))]
 
 
