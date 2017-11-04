@@ -17,7 +17,12 @@ type Follow s = [s]
 
 type ParserCont s a = Input s -> Follow s -> Either String (a, Input s)
 
-data Parser s a = Parser { parserNullible :: Bool, parserFirst :: [s], runParser :: ParserCont s a }
+data Parser s a
+  = Parser
+    { parserNullible :: Bool
+    , parserFirst :: [s]
+    , runParser :: ParserCont s a
+    }
 
 parse :: Symbol s => Parser s a -> Input s -> Either String a
 parse (Parser _ _ p) inp = case p inp [] of
