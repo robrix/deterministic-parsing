@@ -41,7 +41,7 @@ parse (Parser e _ table) state = do
     _ -> Left "no rule to match at end"
 
 instance Functor (Parser s) where
-  fmap g (Parser n f table) = Parser (fmap g n) f (fmap (fmap (fmap (first g)) .) table)
+  fmap g (Parser n f table) = Parser (fmap g n) f (fmap (\ cont state -> fmap (first g) . cont state) table)
 
 instance Symbol s => Applicative (Parser s) where
   pure a = Parser (Just a) mempty mempty
