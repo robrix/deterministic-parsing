@@ -21,9 +21,6 @@ type Follow s = [s]
 
 type ParserCont s a = Input s -> Follow s -> Either String (a, Input s)
 
-ppure :: a -> ParserCont s a
-ppure a i _ = Right (a, i)
-
 psymbol :: Symbol s => s -> ParserCont s s
 psymbol s []      _ = Left "unexpected eof"
 psymbol s (_:inp) _ = Right (s, inp)
@@ -40,7 +37,7 @@ instance Functor (Parser s) where
   fmap g (Parser n f cont) = Parser n f (fmap (fmap (first g)) . cont)
 
 instance Symbol s => Applicative (Parser s) where
-  pure = Parser True [] . ppure
+  pure a = Parser True [] (\ i _ -> Right (a, i))
 
   Parser n1 f1 p1 <*> ~(Parser n2 f2 p2) = Parser (n1 && n2) (combine n1 f1 f2) (p1 `pseq` p2)
     where p1 `pseq` p2 = \ inp follow -> do
