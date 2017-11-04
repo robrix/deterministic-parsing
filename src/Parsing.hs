@@ -12,10 +12,6 @@ type Symbol s = (Ord s, Show s)
 class (Alternative p, Symbol s) => Parsing s p | p -> s where
   symbol :: s -> p s
 
-combine :: Symbol s => Bool -> [s] -> [s] -> [s]
-combine e s1 s2 = s1 `union` if e then s2 else []
-
-
 type Input s = [s]
 type Follow s = [s]
 
@@ -41,6 +37,7 @@ instance Symbol s => Applicative (Parser s) where
             (v1, inp1) <- p1 inp (f2 `comb` follow)
             (v2, inp2) <- p2 inp1 follow
             pure (v1 v2, inp2)
+          combine e s1 s2 = s1 `union` if e then s2 else []
 
 instance Symbol s => Alternative (Parser s) where
   empty = Parser True [] (\ _ _ -> Left "empty")
