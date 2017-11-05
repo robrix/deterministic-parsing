@@ -17,7 +17,8 @@ import Prelude hiding (lookup)
 newtype Relation i a = Relation (i -> Maybe a)
 
 fromList :: Ord i => [(i, a)] -> Relation i a
-fromList list = Relation (`Map.lookup` Map.fromList list)
+fromList list = Relation (`Map.lookup` map)
+  where map = Map.fromList list
 
 fromTable :: Ord i => Table.Table i a -> Relation i a
 fromTable = fromList . Table.toList
