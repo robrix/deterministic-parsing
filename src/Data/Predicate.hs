@@ -4,6 +4,7 @@ module Data.Predicate
 , fromPredicate
 , singleton
 , intersection
+, complement
 , member
 ) where
 
@@ -24,6 +25,9 @@ singleton a = Predicate (== a)
 
 intersection :: Predicate a -> Predicate a -> Predicate a
 intersection (Predicate p1) (Predicate p2) = Predicate ((&&) <$> p1 <*> p2)
+
+complement :: Predicate a -> Predicate a
+complement (Predicate p) = Predicate (not . p)
 
 member :: a -> Predicate a -> Bool
 member a (Predicate p) = p a
