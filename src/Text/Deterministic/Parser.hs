@@ -115,9 +115,7 @@ instance CharParsing (Parser Char) where
   char = symbol
 
 symbol :: Symbol s => s -> Parser s s
-symbol s = Parser Nothing (Predicate.singleton s) (Set.singleton (Right s)) (Table (Table.singleton s (\ state yield err -> case stateInput state of
-  []     -> err (Error (Set.singleton (Right s)) Nothing) state
-  _:_ -> yield s (advanceState state))))
+symbol s = Parser Nothing (Predicate.singleton s) (Set.singleton (Right s)) (Table (Table.singleton s (\ state yield _ -> yield s (advanceState state))))
 
 advanceState :: State s -> State s
 advanceState state = state { stateInput = drop 1 (stateInput state) }
