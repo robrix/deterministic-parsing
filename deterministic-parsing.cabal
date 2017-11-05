@@ -13,7 +13,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Data.Map.Symbolic
-                     , Data.Set.Symbolic
+                     , Data.Predicate
                      , Data.Table
                      , Example.Expr
                      , Text.Deterministic.Parser
