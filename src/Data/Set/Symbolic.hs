@@ -1,13 +1,18 @@
 module Data.Set.Symbolic
 ( Set
+, fromList
 , fromPredicate
 , intersection
 , member
 ) where
 
 import Data.Semigroup
+import qualified Data.Set as Set
 
 newtype Set a = Set (a -> Bool)
+
+fromList :: Ord a => [a] -> Set a
+fromList list = Set (`Set.member` Set.fromList list)
 
 fromPredicate :: (a -> Bool) -> Set a
 fromPredicate = Set
