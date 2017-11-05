@@ -1,6 +1,7 @@
 module Data.Set.Symbolic
 ( Set
 , intersection
+, member
 ) where
 
 import Data.Semigroup
@@ -9,6 +10,9 @@ data Set a = Set (a -> Bool)
 
 intersection :: Set a -> Set a -> Set a
 intersection (Set p1) (Set p2) = Set ((&&) <$> p1 <*> p2)
+
+member :: a -> Set a -> Bool
+member a (Set p) = p a
 
 
 instance Semigroup (Set a) where
