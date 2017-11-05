@@ -8,3 +8,7 @@ data Set a = Set (a -> Bool)
 
 instance Semigroup (Set a) where
   Set p1 <> Set p2 = Set ((||) <$> p1 <*> p2)
+
+instance Monoid (Set a) where
+  mempty = Set (const False)
+  mappend = (<>)
