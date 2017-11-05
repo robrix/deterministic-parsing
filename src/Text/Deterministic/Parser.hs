@@ -12,6 +12,7 @@ import Data.Semigroup
 import qualified Data.Table as Table
 import Text.Parser.Char
 import Text.Parser.Combinators
+import Text.Parser.Token
 
 type Symbol s = (Ord s, Show s)
 
@@ -114,6 +115,8 @@ instance CharParsing (Parser Char) where
   anyChar = Parser Nothing (Predicate.fromPredicate (const True)) (Set.singleton (Left "any char")) (Relation (Relation.fromRelation (\ s -> pure (\ state yield _ -> yield s (advanceState state)))))
 
   char c = Parser Nothing (Predicate.singleton c) (Set.singleton (Right c)) (Table (Table.singleton c (\ state yield _ -> yield c (advanceState state))))
+
+instance TokenParsing (Parser Char)
 
 advanceState :: State s -> State s
 advanceState state = state { stateIndex = succ (stateIndex state), stateInput = drop 1 (stateInput state) }
