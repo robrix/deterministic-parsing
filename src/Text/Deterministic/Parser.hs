@@ -2,12 +2,12 @@
 module Text.Deterministic.Parser where
 
 import Control.Applicative
-import Data.Bifunctor (second)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Maybe (fromMaybe)
 import Data.List (intercalate)
 import Data.Semigroup
+import qualified Data.Table as Table
 import Text.Parser.Char
 import Text.Parser.Combinators
 
@@ -27,7 +27,7 @@ data Parser s a = Parser
   { parserNull :: Maybe a
   , parserFirst :: Set.Set s
   , parserLabels :: Set.Set (Either String s)
-  , parserTable :: forall r . [(s, ParserCont s a r)]
+  , parserTable :: forall r . Table.Table s (ParserCont s a r)
   }
 
 data Error s = Error
@@ -41,28 +41,28 @@ formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (eit
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ labels table) input = do
-  (a, rest) <- choose e labels (Map.fromList table) (State input []) (curry Right) (const . Left)
+  (a, rest) <- choose e labels (Map.fromList (Table.toList table)) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
     c:_ -> Left (Error mempty (Just c))
 
 instance Functor (Parser s) where
-  fmap g (Parser n f l table) = Parser (fmap g n) f l (fmap (second (\ cont state yield -> cont state (yield . g))) table)
+  fmap g (Parser n f l table) = Parser (fmap g n) f l (fmap (\ cont state yield -> cont state (yield . g)) table)
 
 instance Symbol s => Applicative (Parser s) where
   pure a = Parser (Just a) mempty mempty mempty
 
   Parser n1 f1 l1 t1 <*> ~(Parser n2 f2 l2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (combine n1 l1 l2) (t1 `tseq` t2)
-    where table2 = Map.fromList t2
+    where table2 = Map.fromList (Table.toList t2)
           t1 `tseq` t2
-            = fmap (second (\ p state yield err ->
+            = fmap (\ p state yield err ->
               p state { stateFollow = f2 : stateFollow state } (\ f state' ->
                 choose n2 l2 table2 state' (\ a state'' ->
-                  let fa = f a in fa `seq` yield fa state'') err) err)) t1
+                  let fa = f a in fa `seq` yield fa state'') err) err) t1
             <> case n1 of
-              Just f -> fmap (second (\ q state yield err ->
+              Just f -> fmap (\ q state yield err ->
                 q state (\ a state' ->
-                  let fa = f a in fa `seq` yield fa state') err)) t2
+                  let fa = f a in fa `seq` yield fa state') err) t2
               _ -> mempty
 
 combine :: Ord b => Maybe a -> Set.Set b -> Set.Set b -> Set.Set b
@@ -100,6 +100,6 @@ instance CharParsing (Parser Char) where
   char = symbol
 
 symbol :: s -> Parser s s
-symbol s = Parser Nothing (Set.singleton s) (Set.singleton (Right s)) [(s, \ state yield err -> case stateInput state of
+symbol s = Parser Nothing (Set.singleton s) (Set.singleton (Right s)) (Table.singleton s (\ state yield err -> case stateInput state of
   []     -> err (Error (Set.singleton (Right s)) Nothing) state
-  _:rest -> yield s (state { stateInput = rest }))]
+  _:rest -> yield s (state { stateInput = rest })))
