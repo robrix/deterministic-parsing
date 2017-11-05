@@ -99,7 +99,7 @@ instance Symbol s => Parsing (Parser s) where
 
   p <?> label = p { parserLabels = Set.singleton (Left label) }
 
-  unexpected _ = Parser Nothing mempty mempty mempty
+  unexpected s = Parser Nothing (Predicate.complement mempty) (Set.singleton (Left ("not " ++ s))) (Relation (Relation.fromRelation (\ _ -> Just (\ state _ err -> err (Error (Set.singleton (Left ("not " ++ s))) (Just (Left s))) state))))
 
   eof = Parser (Just ()) mempty mempty mempty <?> "eof"
 
