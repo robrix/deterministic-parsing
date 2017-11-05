@@ -108,7 +108,7 @@ instance Symbol s => Parsing (Parser s) where
   notFollowedBy a = Parser (Just ()) (Predicate.complement (parserFirst a)) (Set.map (Left . ("not " ++) . either id show) (parserLabels a)) mempty
 
 instance CharParsing (Parser Char) where
-  satisfy predicate = Parser Nothing (Predicate.fromPredicate predicate) mempty (Relation (Relation.fromRelation (\ s -> guard (predicate s) *> pure (\ state yield _ -> yield s state))))
+  satisfy predicate = Parser Nothing (Predicate.fromPredicate predicate) mempty (Relation (Relation.fromRelation (\ s -> guard (predicate s) *> pure (\ state yield _ -> yield s (advanceState state)))))
 
   notChar c = Parser Nothing (Predicate.fromPredicate (/= c)) (Set.singleton (Left ("not " ++ show c))) (Relation (Relation.fromRelation (\ s -> guard (s /= c) *> pure (\ state yield _ -> yield s (advanceState state)))))
 
