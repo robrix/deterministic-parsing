@@ -1,6 +1,7 @@
 module Data.Set.Hybrid
 ( Set
 , singleton
+, fromPredicate
 ) where
 
 import qualified Data.Set as Set
@@ -12,3 +13,6 @@ data Set a
 
 singleton :: a -> Set a
 singleton = Set . Set.singleton
+
+fromPredicate :: (a -> Bool) -> Set a
+fromPredicate = Sym . Sym.fromPredicate
