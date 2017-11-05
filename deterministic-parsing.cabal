@@ -12,8 +12,8 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Data.Map.Symbolic
-                     , Data.Predicate
+  exposed-modules:     Data.Predicate
+                     , Data.Relation
                      , Data.Table
                      , Example.Expr
                      , Text.Deterministic.Parser
