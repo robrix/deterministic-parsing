@@ -28,8 +28,17 @@ data Parser s a = Parser
   { parserNull :: Maybe a
   , parserFirst :: Predicate.Predicate s
   , parserLabels :: Set.Set (Either String s)
-  , parserTable :: forall r . Table.Table s (ParserCont s a r)
+  , parserTable :: forall r . ParserTable s (ParserCont s a r)
   }
+
+data ParserTable s a
+  = Table (Table.Table s a)
+  | Relation (Relation.Relation s a)
+  deriving (Functor)
+
+toRelation :: Symbol s => ParserTable s a -> Relation.Relation s a
+toRelation (Table t) = Relation.fromTable t
+toRelation (Relation r) = r
 
 data Error s = Error
   { errorExpected :: Set.Set (Either String s)
@@ -42,7 +51,7 @@ formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (eit
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ labels table) input = do
-  (a, rest) <- choose e labels (Relation.fromTable table) (State input []) (curry Right) (const . Left)
+  (a, rest) <- choose e labels (toRelation table) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
     c:_ -> Left (Error mempty (Just c))
@@ -54,7 +63,7 @@ instance Symbol s => Applicative (Parser s) where
   pure a = Parser (Just a) mempty mempty mempty
 
   Parser n1 f1 l1 t1 <*> ~(Parser n2 f2 l2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (combine n1 l1 l2) (t1 `tseq` t2)
-    where table2 = Relation.fromTable t2
+    where table2 = toRelation t2
           t1 `tseq` t2
             = fmap (\ p state yield err ->
               p state { stateFollow = f2 : stateFollow state } (\ f state' ->
@@ -101,6 +110,16 @@ instance CharParsing (Parser Char) where
   char = symbol
 
 symbol :: Symbol s => s -> Parser s s
-symbol s = Parser Nothing (Predicate.singleton s) (Set.singleton (Right s)) (Table.singleton s (\ state yield err -> case stateInput state of
+symbol s = Parser Nothing (Predicate.singleton s) (Set.singleton (Right s)) (Table (Table.singleton s (\ state yield err -> case stateInput state of
   []     -> err (Error (Set.singleton (Right s)) Nothing) state
-  _:rest -> yield s (state { stateInput = rest })))
+  _:rest -> yield s (state { stateInput = rest }))))
+
+instance Symbol s => Semigroup (ParserTable s a) where
+  Table t1 <> Table t2 = Table (t1 <> t2)
+  Relation r1 <> Relation r2 = Relation (r1 <> r2)
+  Table t1 <> Relation r2 = Relation (Relation.fromTable t1 <> r2)
+  Relation r1 <> Table t2 = Relation (r1 <> Relation.fromTable t2)
+
+instance Symbol s => Monoid (ParserTable s a) where
+  mempty = Table mempty
+  mappend = (<>)
