@@ -12,7 +12,8 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Parsing
+  exposed-modules:     Example.Expr
+                     , Parsing
   build-depends:       base >=4.10 && <4.11
                      , containers
                      , parsers
