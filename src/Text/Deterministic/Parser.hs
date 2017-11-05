@@ -113,10 +113,7 @@ instance CharParsing (Parser Char) where
 
   anyChar = Parser Nothing (Predicate.fromPredicate (const True)) (Set.singleton (Left "any char")) (Relation (Relation.fromRelation (\ s -> pure (\ state yield _ -> yield s (advanceState state)))))
 
-  char = symbol
-
-symbol :: Symbol s => s -> Parser s s
-symbol s = Parser Nothing (Predicate.singleton s) (Set.singleton (Right s)) (Table (Table.singleton s (\ state yield _ -> yield s (advanceState state))))
+  char c = Parser Nothing (Predicate.singleton c) (Set.singleton (Right c)) (Table (Table.singleton c (\ state yield _ -> yield c (advanceState state))))
 
 advanceState :: State s -> State s
 advanceState state = state { stateIndex = succ (stateIndex state), stateInput = drop 1 (stateInput state) }
