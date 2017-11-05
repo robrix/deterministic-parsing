@@ -92,11 +92,11 @@ instance Symbol s => Parsing (Parser s) where
 
   p <?> label = p { parserLabels = Set.singleton (Left label) }
 
-  unexpected s = Parser Nothing mempty mempty mempty
+  unexpected _ = Parser Nothing mempty mempty mempty
 
   eof = Parser (Just ()) mempty mempty mempty <?> "eof"
 
-  notFollowedBy wrong = Parser (Just ()) mempty mempty mempty
+  notFollowedBy _ = Parser (Just ()) mempty mempty mempty
 
 symbol :: s -> Parser s s
 symbol s = Parser Nothing (Set.singleton s) (Set.singleton (Right s)) [(s, \ state yield err -> case stateInput state of
