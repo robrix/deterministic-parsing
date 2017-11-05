@@ -12,7 +12,8 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Data.Set.Symbolic
+  exposed-modules:     Data.Map.Symbolic
+                     , Data.Set.Symbolic
                      , Example.Expr
                      , Text.Deterministic.Parser
   build-depends:       base >=4.10 && <4.11
