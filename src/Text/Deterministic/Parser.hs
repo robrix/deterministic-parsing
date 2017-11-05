@@ -116,7 +116,8 @@ instance CharParsing (Parser Char) where
 
   char c = Parser Nothing (Predicate.singleton c) (Set.singleton (Right c)) (Table (Table.singleton c (\ state yield _ -> yield c (advanceState state))))
 
-instance TokenParsing (Parser Char)
+instance TokenParsing (Parser Char) where
+  semi = token (char ';')
 
 advanceState :: State s -> State s
 advanceState state = state { stateIndex = succ (stateIndex state), stateInput = drop 1 (stateInput state) }
