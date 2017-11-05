@@ -65,7 +65,7 @@ instance Symbol s => Applicative (Parser s) where
                   let fa = f a in fa `seq` yield fa state') err) t2
               _ -> mempty
 
-combine :: Ord b => Maybe a -> Set.Set b -> Set.Set b -> Set.Set b
+combine :: Semigroup b => Maybe a -> b -> b -> b
 combine (Just _) s1 s2 = s1 <> s2
 combine _        s1 _  = s1
 
