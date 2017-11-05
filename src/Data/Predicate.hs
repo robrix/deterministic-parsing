@@ -13,7 +13,8 @@ import qualified Data.Set as Set
 newtype Predicate a = Predicate (a -> Bool)
 
 fromList :: Ord a => [a] -> Predicate a
-fromList list = Predicate (`Set.member` Set.fromList list)
+fromList list = Predicate (`Set.member` set)
+  where set = Set.fromList list
 
 fromPredicate :: (a -> Bool) -> Predicate a
 fromPredicate = Predicate
