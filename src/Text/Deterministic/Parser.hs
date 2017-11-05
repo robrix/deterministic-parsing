@@ -42,7 +42,7 @@ formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (eit
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ labels table) input = do
-  (a, rest) <- choose e labels (Relation.fromList (Table.toList table)) (State input []) (curry Right) (const . Left)
+  (a, rest) <- choose e labels (Relation.fromTable table) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
     c:_ -> Left (Error mempty (Just c))
@@ -54,7 +54,7 @@ instance Symbol s => Applicative (Parser s) where
   pure a = Parser (Just a) mempty mempty mempty
 
   Parser n1 f1 l1 t1 <*> ~(Parser n2 f2 l2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (combine n1 l1 l2) (t1 `tseq` t2)
-    where table2 = Relation.fromList (Table.toList t2)
+    where table2 = Relation.fromTable t2
           t1 `tseq` t2
             = fmap (\ p state yield err ->
               p state { stateFollow = f2 : stateFollow state } (\ f state' ->

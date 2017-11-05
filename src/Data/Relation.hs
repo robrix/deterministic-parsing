@@ -1,6 +1,7 @@
 module Data.Relation
 ( Relation
 , fromList
+, fromTable
 , fromRelation
 , singleton
 , lookup
@@ -9,6 +10,7 @@ module Data.Relation
 import Control.Applicative
 import Control.Monad
 import qualified Data.Map as Map
+import qualified Data.Table as Table
 import Data.Semigroup
 import Prelude hiding (lookup)
 
@@ -16,6 +18,9 @@ newtype Relation i a = Relation (i -> Maybe a)
 
 fromList :: Ord i => [(i, a)] -> Relation i a
 fromList list = Relation (`Map.lookup` Map.fromList list)
+
+fromTable :: Ord i => Table.Table i a -> Relation i a
+fromTable = fromList . Table.toList
 
 fromRelation :: (i -> Maybe a) -> Relation i a
 fromRelation = Relation
