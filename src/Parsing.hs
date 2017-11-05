@@ -8,6 +8,7 @@ import qualified Data.Set as Set
 import Data.Maybe (fromMaybe)
 import Data.List (intercalate)
 import Data.Semigroup
+import Text.Parser.Char
 import Text.Parser.Combinators
 
 type Symbol s = (Ord s, Show s)
@@ -95,6 +96,11 @@ instance Symbol s => Parsing (Parser s) where
   eof = Parser (Just ()) mempty mempty mempty <?> "eof"
 
   notFollowedBy _ = Parser (Just ()) mempty mempty mempty
+
+instance CharParsing (Parser Char) where
+  satisfy predicate = empty
+  anyChar = Parser Nothing (Set.fromList [minBound..maxBound]) (Set.singleton (Left "any char")) mempty
+  char = symbol
 
 symbol :: s -> Parser s s
 symbol s = Parser Nothing (Set.singleton s) (Set.singleton (Right s)) [(s, \ state yield err -> case stateInput state of
