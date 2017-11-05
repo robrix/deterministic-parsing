@@ -98,7 +98,7 @@ instance Symbol s => Parsing (Parser s) where
   notFollowedBy _ = Parser (Just ()) mempty mempty mempty
 
 instance CharParsing (Parser Char) where
-  satisfy predicate = empty
+  satisfy _ = empty
   anyChar = Parser Nothing (Set.fromList [minBound..maxBound]) (Set.singleton (Left "any char")) mempty
   char = symbol
 
