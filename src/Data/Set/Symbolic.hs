@@ -1,5 +1,6 @@
 module Data.Set.Symbolic
 ( Set
+, fromPredicate
 , intersection
 , member
 ) where
@@ -7,6 +8,9 @@ module Data.Set.Symbolic
 import Data.Semigroup
 
 newtype Set a = Set (a -> Bool)
+
+fromPredicate :: (a -> Bool) -> Set a
+fromPredicate = Set
 
 intersection :: Set a -> Set a -> Set a
 intersection (Set p1) (Set p2) = Set ((&&) <$> p1 <*> p2)
