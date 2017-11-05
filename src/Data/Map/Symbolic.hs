@@ -1,13 +1,18 @@
 module Data.Map.Symbolic
 ( Map
+, singleton
 , lookup
 ) where
 
 import Control.Applicative
+import Control.Monad
 import Data.Semigroup
 import Prelude hiding (lookup)
 
 newtype Map i a = Map (i -> Maybe a)
+
+singleton :: Eq i => i -> a -> Map i a
+singleton i a = Map ((*> pure a) . guard . (== i))
 
 lookup :: i -> Map i a -> Maybe a
 lookup i (Map m) = m i
