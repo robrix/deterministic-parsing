@@ -14,3 +14,7 @@ lookup i (Map m) = m i
 
 instance Semigroup (Map i a) where
   Map p1 <> Map p2 = Map ((<|>) <$> p1 <*> p2)
+
+instance Monoid (Map i a) where
+  mempty = Map (const Nothing)
+  mappend = (<>)
