@@ -3,7 +3,7 @@ module Example.Expr where
 import Control.Applicative
 import Data.Char
 import Data.Foldable
-import Parsing
+import Text.Deterministic.Parser
 import Text.Parser.Combinators
 
 data Expr = Lit Integer | Expr :+ Expr | Expr :* Expr

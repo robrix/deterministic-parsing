@@ -1,5 +1,5 @@
 {-# LANGUAGE ConstraintKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, MultiParamTypeClasses, RankNTypes #-}
-module Parsing where
+module Text.Deterministic.Parser where
 
 import Control.Applicative
 import Data.Bifunctor (second)

@@ -13,7 +13,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Example.Expr
-                     , Parsing
+                     , Text.Deterministic.Parser
   build-depends:       base >=4.10 && <4.11
                      , containers
                      , parsers
