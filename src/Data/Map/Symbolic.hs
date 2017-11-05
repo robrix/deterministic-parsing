@@ -1,5 +1,6 @@
 module Data.Map.Symbolic
 ( Map
+, fromRelation
 , singleton
 , lookup
 ) where
@@ -10,6 +11,9 @@ import Data.Semigroup
 import Prelude hiding (lookup)
 
 newtype Map i a = Map (i -> Maybe a)
+
+fromRelation :: (i -> Maybe a) -> Map i a
+fromRelation = Map
 
 singleton :: Eq i => i -> a -> Map i a
 singleton i a = Map ((*> pure a) . guard . (== i))
