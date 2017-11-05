@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor, GeneralizedNewtypeDeriving #-}
 module Data.Relation
 ( Relation
 , fromList
@@ -15,6 +16,7 @@ import Data.Semigroup
 import Prelude hiding (lookup)
 
 newtype Relation i a = Relation (i -> Maybe a)
+  deriving (Functor)
 
 fromList :: Ord i => [(i, a)] -> Relation i a
 fromList list = Relation (`Map.lookup` map)
