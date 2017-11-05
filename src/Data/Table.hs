@@ -1,9 +1,13 @@
+{-# LANGUAGE DeriveFoldable, DeriveFunctor, DeriveTraversable, GeneralizedNewtypeDeriving #-}
 module Data.Table
 ( Table(toList)
 , fromList
 ) where
 
+import Data.Semigroup
+
 newtype Table i a = Table { toList :: [(i, a)] }
+  deriving (Eq, Foldable, Functor, Monoid, Ord, Semigroup, Show, Traversable)
 
 fromList :: [(i, a)] -> Table i a
 fromList = Table
