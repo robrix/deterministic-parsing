@@ -16,7 +16,8 @@ import Text.Parser.Combinators
 type Symbol s = (Ord s, Show s)
 
 data State s = State
-  { stateInput :: ![s]
+  { stateIndex :: {-# UNPACK #-} !Int
+  , stateInput :: ![s]
   , stateFollow :: ![Predicate.Predicate s]
   }
 
@@ -52,7 +53,7 @@ formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (eit
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ labels table) input = do
-  (a, rest) <- choose e labels (toRelation table) (State input []) (curry Right) (const . Left)
+  (a, rest) <- choose e labels (toRelation table) (State 0 input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
     c:_ -> Left (Error mempty (Just (Right c)))
@@ -118,7 +119,7 @@ symbol :: Symbol s => s -> Parser s s
 symbol s = Parser Nothing (Predicate.singleton s) (Set.singleton (Right s)) (Table (Table.singleton s (\ state yield _ -> yield s (advanceState state))))
 
 advanceState :: State s -> State s
-advanceState state = state { stateInput = drop 1 (stateInput state) }
+advanceState state = state { stateIndex = succ (stateIndex state), stateInput = drop 1 (stateInput state) }
 
 instance Symbol s => Semigroup (ParserTable s a) where
   Table t1 <> Table t2 = Table (t1 <> t2)
