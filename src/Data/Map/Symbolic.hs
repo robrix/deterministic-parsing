@@ -12,6 +12,7 @@ newtype Map i a = Map (i -> Maybe a)
 lookup :: i -> Map i a -> Maybe a
 lookup i (Map m) = m i
 
+
 instance Semigroup (Map i a) where
   Map p1 <> Map p2 = Map ((<|>) <$> p1 <*> p2)
 
