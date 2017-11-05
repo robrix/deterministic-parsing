@@ -33,6 +33,8 @@ member :: a -> Predicate a -> Bool
 member a (Predicate p) = p a
 
 
+-- | The 'Semigroup' instance implements the union of the sets described by 'Predicate's.
+-- prop> \ a b c -> member a (fromList b <> fromList c) == member a (fromList (b <> c))
 instance Semigroup (Predicate a) where
   Predicate p1 <> Predicate p2 = Predicate ((||) <$> p1 <*> p2)
 
