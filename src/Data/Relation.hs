@@ -19,6 +19,7 @@ newtype Relation i a = Relation (i -> Maybe a)
   deriving (Functor)
 
 fromList :: Ord i => [(i, a)] -> Relation i a
+fromList [] = mempty
 fromList list = Relation (`Map.lookup` map)
   where map = Map.fromList list
 
