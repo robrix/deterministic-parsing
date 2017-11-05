@@ -2,6 +2,7 @@
 module Text.Deterministic.Parser where
 
 import Control.Applicative
+import Control.Monad (guard)
 import qualified Data.Predicate as Predicate
 import qualified Data.Relation as Relation
 import qualified Data.Set as Set
@@ -105,7 +106,7 @@ instance Symbol s => Parsing (Parser s) where
   notFollowedBy _ = Parser (Just ()) mempty mempty mempty
 
 instance CharParsing (Parser Char) where
-  satisfy predicate = Parser Nothing (Predicate.fromPredicate predicate) mempty mempty
+  satisfy predicate = Parser Nothing (Predicate.fromPredicate predicate) mempty (Relation (Relation.fromRelation (\ s -> guard (predicate s) *> pure (\ state yield _ -> yield s state))))
   anyChar = Parser Nothing (Predicate.fromPredicate (const True)) (Set.singleton (Left "any char")) mempty
   char = symbol
 
