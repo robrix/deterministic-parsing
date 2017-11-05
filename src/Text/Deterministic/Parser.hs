@@ -43,19 +43,19 @@ toRelation (Relation r) = r
 
 data Error s = Error
   { errorExpected :: Set.Set (Either String s)
-  , errorActual :: Maybe s
+  , errorActual :: Maybe (Either String s)
   }
   deriving (Eq, Ord, Show)
 
 formatError :: Symbol s => Error s -> String
-formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (either id show) (Set.toList expected)) ++ ") " ++ maybe "at end" (("but got " ++) . show) actual
+formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (either id show) (Set.toList expected)) ++ ") " ++ maybe "at end" (("but got " ++) . either id show) actual
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ labels table) input = do
   (a, rest) <- choose e labels (toRelation table) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
-    c:_ -> Left (Error mempty (Just c))
+    c:_ -> Left (Error mempty (Just (Right c)))
 
 instance Functor (Parser s) where
   fmap g (Parser n f l table) = Parser (fmap g n) f l (fmap (\ cont state yield -> cont state (yield . g)) table)
@@ -87,7 +87,7 @@ choose nullible labels b = go
           c:_ -> fromMaybe (notFound c) (Relation.lookup c b) state yield err
         notFound c state yield err = case nullible of
           Just a | any (c `Predicate.member`) (stateFollow state) -> yield a state
-          _                                                       -> err (Error labels (Just c)) state
+          _                                                       -> err (Error labels (Just (Right c))) state
 
 instance Symbol s => Alternative (Parser s) where
   empty = Parser Nothing mempty mempty mempty
