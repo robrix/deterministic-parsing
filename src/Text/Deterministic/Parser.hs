@@ -110,9 +110,9 @@ instance Symbol s => Parsing (Parser s) where
 instance CharParsing (Parser Char) where
   satisfy predicate = Parser Nothing (Predicate.fromPredicate predicate) mempty (Relation (Relation.fromRelation (\ s -> guard (predicate s) *> pure (\ state yield _ -> yield s (advanceState state)))))
 
-  notChar c = Parser Nothing (Predicate.fromPredicate (/= c)) (Set.singleton (Left ("not " ++ show c))) (Relation (Relation.fromRelation (\ s -> guard (s /= c) *> pure (\ state yield _ -> yield s (advanceState state)))))
+  notChar c = satisfy (/= c) <?> "not " ++ show c
 
-  anyChar = Parser Nothing (Predicate.fromPredicate (const True)) (Set.singleton (Left "any char")) (Relation (Relation.fromRelation (\ s -> pure (\ state yield _ -> yield s (advanceState state)))))
+  anyChar = satisfy (const True) <?> "any char"
 
   char c = Parser Nothing (Predicate.singleton c) (Set.singleton (Right c)) (Table (Table.singleton c (\ state yield _ -> yield c (advanceState state))))
 
