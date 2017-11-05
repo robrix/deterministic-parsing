@@ -23,9 +23,6 @@ type Success s a r = a -> State s -> r
 type Failure s a r = Error s -> State s -> r
 type ParserCont s a r = State s -> Success s a r -> Failure s a r -> r
 
-newtype Table s a = Table { tableBranches :: Map.Map s a }
-  deriving (Eq, Foldable, Functor, Monoid, Ord, Semigroup, Show, Traversable)
-
 data Parser s a = Parser
   { parserNull :: Maybe a
   , parserFirst :: Set.Set s
@@ -44,7 +41,7 @@ formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (eit
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ labels table) input = do
-  (a, rest) <- choose e labels (Table (Map.fromList table)) (State input []) (curry Right) (const . Left)
+  (a, rest) <- choose e labels (Map.fromList table) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
     c:_ -> Left (Error mempty (Just c))
@@ -56,7 +53,7 @@ instance Symbol s => Applicative (Parser s) where
   pure a = Parser (Just a) mempty mempty mempty
 
   Parser n1 f1 l1 t1 <*> ~(Parser n2 f2 l2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (combine n1 l1 l2) (t1 `tseq` t2)
-    where table2 = Table (Map.fromList t2)
+    where table2 = Map.fromList t2
           t1 `tseq` t2
             = fmap (second (\ p state yield err ->
               p state { stateFollow = f2 : stateFollow state } (\ f state' ->
@@ -72,8 +69,8 @@ combine :: Ord b => Maybe a -> Set.Set b -> Set.Set b -> Set.Set b
 combine (Just _) s1 s2 = s1 <> s2
 combine _        s1 _  = s1
 
-choose :: Symbol s => Maybe a -> Set.Set (Either String s) -> Table s (ParserCont s a r) -> ParserCont s a r
-choose nullible labels (Table b) = go
+choose :: Symbol s => Maybe a -> Set.Set (Either String s) -> Map.Map s (ParserCont s a r) -> ParserCont s a r
+choose nullible labels b = go
   where go state yield err = case stateInput state of
           []  -> maybe (err (Error labels Nothing)) yield nullible state
           c:_ -> fromMaybe (notFound c) (Map.lookup c b) state yield err
