@@ -2,8 +2,8 @@
 module Text.Deterministic.Parser where
 
 import Control.Applicative
-import qualified Data.Map as Map
 import qualified Data.Predicate as Predicate
+import qualified Data.Relation as Relation
 import qualified Data.Set as Set
 import Data.Maybe (fromMaybe)
 import Data.List (intercalate)
@@ -42,7 +42,7 @@ formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (eit
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ labels table) input = do
-  (a, rest) <- choose e labels (Map.fromList (Table.toList table)) (State input []) (curry Right) (const . Left)
+  (a, rest) <- choose e labels (Relation.fromList (Table.toList table)) (State input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
     c:_ -> Left (Error mempty (Just c))
@@ -54,7 +54,7 @@ instance Symbol s => Applicative (Parser s) where
   pure a = Parser (Just a) mempty mempty mempty
 
   Parser n1 f1 l1 t1 <*> ~(Parser n2 f2 l2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (combine n1 l1 l2) (t1 `tseq` t2)
-    where table2 = Map.fromList (Table.toList t2)
+    where table2 = Relation.fromList (Table.toList t2)
           t1 `tseq` t2
             = fmap (\ p state yield err ->
               p state { stateFollow = f2 : stateFollow state } (\ f state' ->
@@ -70,11 +70,11 @@ combine :: Semigroup b => Maybe a -> b -> b -> b
 combine (Just _) s1 s2 = s1 <> s2
 combine _        s1 _  = s1
 
-choose :: Symbol s => Maybe a -> Set.Set (Either String s) -> Map.Map s (ParserCont s a r) -> ParserCont s a r
+choose :: Symbol s => Maybe a -> Set.Set (Either String s) -> Relation.Relation s (ParserCont s a r) -> ParserCont s a r
 choose nullible labels b = go
   where go state yield err = case stateInput state of
           []  -> maybe (err (Error labels Nothing)) yield nullible state
-          c:_ -> fromMaybe (notFound c) (Map.lookup c b) state yield err
+          c:_ -> fromMaybe (notFound c) (Relation.lookup c b) state yield err
         notFound c state yield err = case nullible of
           Just a | any (c `Predicate.member`) (stateFollow state) -> yield a state
           _                                                       -> err (Error labels (Just c)) state
