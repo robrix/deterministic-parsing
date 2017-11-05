@@ -107,7 +107,9 @@ instance Symbol s => Parsing (Parser s) where
 
 instance CharParsing (Parser Char) where
   satisfy predicate = Parser Nothing (Predicate.fromPredicate predicate) mempty (Relation (Relation.fromRelation (\ s -> guard (predicate s) *> pure (\ state yield _ -> yield s state))))
+
   anyChar = Parser Nothing (Predicate.fromPredicate (const True)) (Set.singleton (Left "any char")) mempty
+
   char = symbol
 
 symbol :: Symbol s => s -> Parser s s
