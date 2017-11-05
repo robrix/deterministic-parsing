@@ -2,6 +2,7 @@ module Data.Set.Symbolic
 ( Set
 , fromList
 , fromPredicate
+, singleton
 , intersection
 , member
 ) where
@@ -16,6 +17,9 @@ fromList list = Set (`Set.member` Set.fromList list)
 
 fromPredicate :: (a -> Bool) -> Set a
 fromPredicate = Set
+
+singleton :: Eq a => a -> Set a
+singleton a = Set (== a)
 
 intersection :: Set a -> Set a -> Set a
 intersection (Set p1) (Set p2) = Set ((&&) <$> p1 <*> p2)
