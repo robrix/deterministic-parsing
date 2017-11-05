@@ -13,7 +13,6 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Data.Map.Symbolic
-                     , Data.Set.Hybrid
                      , Data.Set.Symbolic
                      , Data.Table
                      , Example.Expr
