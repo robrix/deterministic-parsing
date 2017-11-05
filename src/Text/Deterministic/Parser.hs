@@ -4,6 +4,7 @@ module Text.Deterministic.Parser where
 import Control.Applicative
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Set.Symbolic as Sym
 import Data.Maybe (fromMaybe)
 import Data.List (intercalate)
 import Data.Semigroup
@@ -15,7 +16,7 @@ type Symbol s = (Ord s, Show s)
 
 data State s = State
   { stateInput :: ![s]
-  , stateFollow :: ![Set.Set s]
+  , stateFollow :: ![Sym.Set s]
   }
 
 type Result s = Either (Error s)
@@ -25,7 +26,7 @@ type ParserCont s a r = State s -> Success s a r -> Failure s a r -> r
 
 data Parser s a = Parser
   { parserNull :: Maybe a
-  , parserFirst :: Set.Set s
+  , parserFirst :: Sym.Set s
   , parserLabels :: Set.Set (Either String s)
   , parserTable :: forall r . Table.Table s (ParserCont s a r)
   }
@@ -75,7 +76,7 @@ choose nullible labels b = go
           []  -> maybe (err (Error labels Nothing)) yield nullible state
           c:_ -> fromMaybe (notFound c) (Map.lookup c b) state yield err
         notFound c state yield err = case nullible of
-          Just a | any (c `Set.member`) (stateFollow state) -> yield a state
+          Just a | any (c `Sym.member`) (stateFollow state) -> yield a state
           _                                                 -> err (Error labels (Just c)) state
 
 instance Symbol s => Alternative (Parser s) where
@@ -96,10 +97,10 @@ instance Symbol s => Parsing (Parser s) where
 
 instance CharParsing (Parser Char) where
   satisfy _ = empty
-  anyChar = Parser Nothing (Set.fromList [minBound..maxBound]) (Set.singleton (Left "any char")) mempty
+  anyChar = Parser Nothing (Sym.fromPredicate (const True)) (Set.singleton (Left "any char")) mempty
   char = symbol
 
-symbol :: s -> Parser s s
-symbol s = Parser Nothing (Set.singleton s) (Set.singleton (Right s)) (Table.singleton s (\ state yield err -> case stateInput state of
+symbol :: Symbol s => s -> Parser s s
+symbol s = Parser Nothing (Sym.singleton s) (Set.singleton (Right s)) (Table.singleton s (\ state yield err -> case stateInput state of
   []     -> err (Error (Set.singleton (Right s)) Nothing) state
   _:rest -> yield s (state { stateInput = rest })))
