@@ -17,6 +17,7 @@ library
                      , Data.Table
                      , Example.Expr
                      , Text.Deterministic.Parser
+                     , Text.Deterministic.Token
   build-depends:       base >=4.10 && <4.11
                      , containers
                      , parsers
