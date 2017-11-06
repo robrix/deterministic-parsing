@@ -10,3 +10,8 @@ data Offset = Offset
   , offsetLines   :: {-# UNPACK#-} !Int
   , offsetColumns :: {-# UNPACK#-} !Int
   }
+
+data Interval = Interval
+  { intervalStart :: {-# UNPACK #-} !Offset
+  , intervalEnd   :: {-# UNPACK #-} !Offset
+  }
