@@ -46,6 +46,9 @@ toRelation (Relation r) = r
 fromRelation :: (s -> Maybe a) -> ParserTable s a
 fromRelation = Relation . Relation.fromRelation
 
+singleton :: Symbol s => s -> a -> ParserTable s a
+singleton = fmap Table . Table.singleton
+
 data Error s = Error
   { errorExpected :: Set.Set (Either String s)
   , errorActual :: Maybe (Either String s)
@@ -117,7 +120,7 @@ instance CharParsing (Parser Char) where
 
   anyChar = satisfy (const True) <?> "any char"
 
-  char c = Parser Nothing (Predicate.singleton c) (Set.singleton (Right c)) (Table (Table.singleton c (\ state yield _ -> yield c (advanceState state))))
+  char c = Parser Nothing (Predicate.singleton c) (Set.singleton (Right c)) (singleton c (\ state yield _ -> yield c (advanceState state)))
 
 instance TokenParsing (Parser Char) where
   semi = token (char ';')
