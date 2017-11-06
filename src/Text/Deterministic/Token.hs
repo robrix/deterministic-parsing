@@ -20,3 +20,7 @@ data Interval = Interval
 
 instance Semigroup Offset where
   Offset b1 l1 _ <> Offset b2 l2 c2 = Offset (b1 + b2) (l1 + l2) c2
+
+instance Monoid Offset where
+  mempty = Offset 0 0 0
+  mappend = (<>)
