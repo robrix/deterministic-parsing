@@ -1,5 +1,6 @@
 module Text.Deterministic.Token where
 
+import Data.Char
 import Data.Semigroup
 
 data Token s = Token
@@ -40,4 +41,9 @@ class (Ord s, Show s) => Symbol s where
 
 instance Symbol Char where
   symbolOffset '\n' = Offset 1 1 0
-  symbolOffset _    = Offset 1 0 1
+  symbolOffset c
+    | o <= 0x7f   = Offset 1 0 1
+    | o <= 0x7ff  = Offset 2 0 1
+    | o <= 0xffff = Offset 3 0 1
+    | otherwise   = Offset 4 0 1
+    where o = ord c
