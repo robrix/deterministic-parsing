@@ -36,8 +36,8 @@ data Interval = Interval
 
 
 class (Ord s, Show s) => Symbol s where
-  offsetFrom :: Offset -> s -> Offset
+  symbolOffset :: s -> Offset
 
 instance Symbol Char where
-  offsetFrom (Offset bytes lines _)       '\n' = Offset (succ bytes) (succ lines) 0
-  offsetFrom (Offset bytes lines columns) _    = Offset (succ bytes)       lines (succ columns)
+  symbolOffset '\n' = Offset 1 1 0
+  symbolOffset _    = Offset 1 0 1

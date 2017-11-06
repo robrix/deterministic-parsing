@@ -126,7 +126,7 @@ instance TokenParsing (Parser Char) where
 
 advanceState :: Symbol s => State s -> State s
 advanceState state = case stateInput state of
-  first:rest -> state { stateOffset = offsetFrom (stateOffset state) first , stateInput = rest }
+  first:rest -> state { stateOffset = stateOffset state <> symbolOffset first, stateInput = rest }
   []         -> state
 
 instance Symbol s => Semigroup (ParserTable s a) where
