@@ -5,7 +5,7 @@ import Data.Semigroup
 
 data Token s = Token
   { tokenSymbol :: !s
-  , tokenOffset :: {-# UNPACK #-} !Offset
+  , tokenStart  :: {-# UNPACK #-} !Offset
   }
   deriving (Eq, Ord, Show)
 
