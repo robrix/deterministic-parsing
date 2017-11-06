@@ -2,11 +2,11 @@ module Text.Deterministic.Token where
 
 data Token s = Token
   { tokenSymbol :: !s
-  , tokenDelta  :: {-# UNPACK #-} !Delta
+  , tokenOffset :: {-# UNPACK #-} !Offset
   }
 
-data Delta = Delta
-  { deltaBytes   :: {-# UNPACK#-} !Int
-  , deltaLines   :: {-# UNPACK#-} !Int
-  , deltaColumns :: {-# UNPACK#-} !Int
+data Offset = Offset
+  { offsetBytes   :: {-# UNPACK#-} !Int
+  , offsetLines   :: {-# UNPACK#-} !Int
+  , offsetColumns :: {-# UNPACK#-} !Int
   }
