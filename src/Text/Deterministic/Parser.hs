@@ -43,6 +43,9 @@ toRelation :: Symbol s => ParserTable s a -> Relation.Relation s a
 toRelation (Table t) = Relation.fromTable t
 toRelation (Relation r) = r
 
+fromRelation :: (s -> Maybe a) -> ParserTable s a
+fromRelation = Relation . Relation.fromRelation
+
 data Error s = Error
   { errorExpected :: Set.Set (Either String s)
   , errorActual :: Maybe (Either String s)
@@ -101,14 +104,14 @@ instance Symbol s => Parsing (Parser s) where
 
   p <?> label = p { parserLabels = Set.singleton (Left label) }
 
-  unexpected s = Parser Nothing (Predicate.complement mempty) (Set.singleton (Left ("not " ++ s))) (Relation (Relation.fromRelation (\ _ -> Just (\ state _ err -> err (Error (Set.singleton (Left ("not " ++ s))) (Just (Left s))) state))))
+  unexpected s = Parser Nothing (Predicate.complement mempty) (Set.singleton (Left ("not " ++ s))) (fromRelation (\ _ -> Just (\ state _ err -> err (Error (Set.singleton (Left ("not " ++ s))) (Just (Left s))) state)))
 
   eof = Parser (Just ()) mempty mempty mempty <?> "eof"
 
   notFollowedBy a = Parser (Just ()) (Predicate.complement (parserFirst a)) (Set.map (Left . ("not " ++) . either id show) (parserLabels a)) mempty
 
 instance CharParsing (Parser Char) where
-  satisfy predicate = Parser Nothing (Predicate.fromPredicate predicate) mempty (Relation (Relation.fromRelation (\ s -> guard (predicate s) *> pure (\ state yield _ -> yield s (advanceState state)))))
+  satisfy predicate = Parser Nothing (Predicate.fromPredicate predicate) mempty (fromRelation (\ s -> guard (predicate s) *> pure (\ state yield _ -> yield s (advanceState state))))
 
   notChar c = satisfy (/= c) <?> "not " ++ show c
 
