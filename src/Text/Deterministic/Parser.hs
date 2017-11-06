@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, DeriveFoldable, DeriveFunctor, DeriveTraversable, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, MultiParamTypeClasses, RankNTypes #-}
+{-# LANGUAGE ConstraintKinds, DeriveFunctor, FlexibleInstances, RankNTypes #-}
 module Text.Deterministic.Parser where
 
 import Control.Applicative
