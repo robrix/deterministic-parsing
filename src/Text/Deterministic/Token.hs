@@ -24,3 +24,11 @@ instance Semigroup Offset where
 instance Monoid Offset where
   mempty = Offset 0 0 0
   mappend = (<>)
+
+
+class (Ord s, Show s) => Symbol s where
+  offsetFrom :: Offset -> s -> Offset
+
+instance Symbol Char where
+  offsetFrom (Offset bytes lines _)       '\n' = Offset (succ bytes) (succ lines) 0
+  offsetFrom (Offset bytes lines columns) _    = Offset (succ bytes)       lines (succ columns)
