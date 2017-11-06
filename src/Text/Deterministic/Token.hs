@@ -19,7 +19,9 @@ data Offset = Offset
 -- prop> \ a b -> Offset a 0 a <> Offset b 0 b == Offset (a + b) 0 (a + b)
 -- prop> \ a b c -> Offset a a c <> Offset b b 0 == Offset (a + b) (a + b) 0
 instance Semigroup Offset where
-  Offset b1 l1 _ <> Offset b2 l2 c2 = Offset (b1 + b2) (l1 + l2) c2
+  Offset b1 l1 c1 <> Offset b2 l2 c2
+    | l2 == 0   = Offset (b1 + b2)  l1       (c1 + c2)
+    | otherwise = Offset (b1 + b2) (l1 + l2)       c2
 
 instance Monoid Offset where
   mempty = Offset 0 0 0
