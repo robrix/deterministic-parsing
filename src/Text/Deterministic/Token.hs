@@ -6,12 +6,14 @@ data Token s = Token
   { tokenSymbol :: !s
   , tokenOffset :: {-# UNPACK #-} !Offset
   }
+  deriving (Eq, Ord, Show)
 
 data Offset = Offset
   { offsetBytes   :: {-# UNPACK#-} !Int
   , offsetLines   :: {-# UNPACK#-} !Int
   , offsetColumns :: {-# UNPACK#-} !Int
   }
+  deriving (Eq, Ord, Show)
 
 instance Semigroup Offset where
   Offset b1 l1 _ <> Offset b2 l2 c2 = Offset (b1 + b2) (l1 + l2) c2
@@ -25,6 +27,7 @@ data Interval = Interval
   { intervalStart :: {-# UNPACK #-} !Offset
   , intervalEnd   :: {-# UNPACK #-} !Offset
   }
+  deriving (Eq, Ord, Show)
 
 
 class (Ord s, Show s) => Symbol s where
