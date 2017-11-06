@@ -23,8 +23,8 @@ instance Symbol Char where
   offsetFrom (Offset bytes lines columns) _    = Offset (succ bytes)       lines (succ columns)
 
 data State s = State
-  { stateIndex :: {-# UNPACK #-} !Int
-  , stateInput :: ![s]
+  { stateOffset :: {-# UNPACK #-} !Offset
+  , stateInput  :: ![s]
   , stateFollow :: ![Predicate.Predicate s]
   }
 
@@ -66,7 +66,7 @@ formatError (Error expected actual) = "expected (" ++ intercalate ", " (map (eit
 
 parse :: Symbol s => Parser s a -> [s] -> Result s a
 parse (Parser e _ labels table) input = do
-  (a, rest) <- choose e labels (toRelation table) (State 0 input []) (curry Right) (const . Left)
+  (a, rest) <- choose e labels (toRelation table) (State mempty input []) (curry Right) (const . Left)
   case stateInput rest of
     []  -> Right a
     c:_ -> Left (Error mempty (Just (Right c)))
@@ -131,8 +131,10 @@ instance CharParsing (Parser Char) where
 instance TokenParsing (Parser Char) where
   semi = token (char ';')
 
-advanceState :: State s -> State s
-advanceState state = state { stateIndex = succ (stateIndex state), stateInput = drop 1 (stateInput state) }
+advanceState :: Symbol s => State s -> State s
+advanceState state = case stateInput state of
+  first:rest -> state { stateOffset = offsetFrom (stateOffset state) first , stateInput = rest }
+  []         -> state
 
 instance Symbol s => Semigroup (ParserTable s a) where
   Table t1 <> Table t2 = Table (t1 <> t2)
