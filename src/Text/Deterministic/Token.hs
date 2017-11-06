@@ -13,17 +13,18 @@ data Offset = Offset
   , offsetColumns :: {-# UNPACK#-} !Int
   }
 
-data Interval = Interval
-  { intervalStart :: {-# UNPACK #-} !Offset
-  , intervalEnd   :: {-# UNPACK #-} !Offset
-  }
-
 instance Semigroup Offset where
   Offset b1 l1 _ <> Offset b2 l2 c2 = Offset (b1 + b2) (l1 + l2) c2
 
 instance Monoid Offset where
   mempty = Offset 0 0 0
   mappend = (<>)
+
+
+data Interval = Interval
+  { intervalStart :: {-# UNPACK #-} !Offset
+  , intervalEnd   :: {-# UNPACK #-} !Offset
+  }
 
 
 class (Ord s, Show s) => Symbol s where
