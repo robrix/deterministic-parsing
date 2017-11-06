@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, DeriveFunctor, FlexibleInstances, RankNTypes #-}
+{-# LANGUAGE DeriveFunctor, FlexibleInstances, RankNTypes #-}
 module Text.Deterministic.Parser where
 
 import Control.Applicative
@@ -10,11 +10,17 @@ import Data.Maybe (fromMaybe)
 import Data.List (intercalate)
 import Data.Semigroup
 import qualified Data.Table as Table
+import Text.Deterministic.Token
 import Text.Parser.Char
 import Text.Parser.Combinators
 import Text.Parser.Token
 
-type Symbol s = (Ord s, Show s)
+class (Ord s, Show s) => Symbol s where
+  offsetFrom :: Offset -> s -> Offset
+
+instance Symbol Char where
+  offsetFrom (Offset bytes lines _)       '\n' = Offset (succ bytes) (succ lines) 0
+  offsetFrom (Offset bytes lines columns) _    = Offset (succ bytes)       lines (succ columns)
 
 data State s = State
   { stateIndex :: {-# UNPACK #-} !Int
