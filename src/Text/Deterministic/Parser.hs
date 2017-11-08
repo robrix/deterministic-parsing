@@ -3,12 +3,12 @@ module Text.Deterministic.Parser where
 
 import Control.Applicative
 import Control.Monad (guard)
+import Data.List (intercalate)
+import Data.Maybe (fromMaybe)
 import qualified Data.Predicate as Predicate
 import qualified Data.Relation as Relation
-import qualified Data.Set as Set
-import Data.Maybe (fromMaybe)
-import Data.List (intercalate)
 import Data.Semigroup
+import qualified Data.Set as Set
 import qualified Data.Table as Table
 import Text.Deterministic.Token
 import Text.Parser.Char
