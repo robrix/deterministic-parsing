@@ -88,11 +88,11 @@ combine (Just _) s1 s2 = s1 <> s2
 combine _        s1 _  = s1
 
 choose :: Symbol s => Maybe a -> Set.Set (Either String s) -> Relation.Relation s (ParserCont s a r) -> ParserCont s a r
-choose nullible labels b = go
+choose nullable labels b = go
   where go state yield err = case stateInput state of
-          []  -> maybe (err (Error labels Nothing)) yield nullible state
+          []  -> maybe (err (Error labels Nothing)) yield nullable state
           c:_ -> fromMaybe (notFound c) (Relation.lookup c b) state yield err
-        notFound c state yield err = case nullible of
+        notFound c state yield err = case nullable of
           Just a | any (c `Predicate.member`) (stateFollow state) -> yield a state
           _                                                       -> err (Error labels (Just (Right c))) state
 
