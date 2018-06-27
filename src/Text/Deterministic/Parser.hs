@@ -71,16 +71,13 @@ instance Symbol s => Applicative (Parser s) where
 
   Parser n1 f1 l1 t1 <*> ~(Parser n2 f2 l2 t2) = Parser (n1 <*> n2) (combine n1 f1 f2) (combine n1 l1 l2) (t1 `tseq` t2)
     where table2 = toRelation t2
-          t1 `tseq` t2
-            = fmap (\ p state yield err ->
-              p state { stateFollow = f2 : stateFollow state } (\ f state' ->
-                choose n2 l2 table2 state' (\ a state'' ->
-                  let fa = f a in fa `seq` yield fa state'') err) err) t1
-            <> case n1 of
-              Just f -> fmap (\ q state yield err ->
-                q state (\ a state' ->
-                  let fa = f a in fa `seq` yield fa state') err) t2
-              _ -> mempty
+          t1 `tseq` t2 = fmap choose1 t1 <> case n1 of
+            Just f -> fmap (choose2 f) t2
+            _ -> mempty
+          choose1 p state yield err = p state { stateFollow = f2 : stateFollow state } (\ f state' ->
+            choose n2 l2 table2 state' (yieldStrict f yield) err) err
+          choose2 f q state yield = q state (yieldStrict f yield)
+          yieldStrict f yield a state = let fa = f a in fa `seq` yield fa state
 
 combine :: Semigroup b => Maybe a -> b -> b -> b
 combine (Just _) s1 s2 = s1 <> s2
