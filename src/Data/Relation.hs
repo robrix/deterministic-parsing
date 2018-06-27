@@ -13,7 +13,6 @@ import Control.Applicative
 import Control.Monad
 import qualified Data.Map as Map
 import qualified Data.Table as Table
-import Data.Semigroup
 import Prelude hiding (lookup)
 
 newtype Relation i a = Relation (i -> Maybe a)

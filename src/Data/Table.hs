@@ -7,7 +7,6 @@ module Data.Table
 
 import Data.Function (on)
 import Data.List (unionBy)
-import Data.Semigroup
 
 newtype Table i a = Table { toList :: [(i, a)] }
   deriving (Eq, Foldable, Functor, Ord, Show, Traversable)

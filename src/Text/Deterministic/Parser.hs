@@ -7,7 +7,6 @@ import Data.List (intercalate)
 import Data.Maybe (fromMaybe)
 import qualified Data.Predicate as Predicate
 import qualified Data.Relation as Relation
-import Data.Semigroup
 import qualified Data.Set as Set
 import qualified Data.Table as Table
 import Text.Deterministic.Token

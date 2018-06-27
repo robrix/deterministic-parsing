@@ -8,7 +8,6 @@ module Data.Predicate
 , member
 ) where
 
-import Data.Semigroup
 import qualified Data.Set as Set
 
 newtype Predicate a = Predicate (a -> Bool)

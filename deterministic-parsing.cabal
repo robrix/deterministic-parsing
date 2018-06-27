@@ -18,7 +18,7 @@ library
                      , Example.Expr
                      , Text.Deterministic.Parser
                      , Text.Deterministic.Token
-  build-depends:       base >=4.10 && <4.11
+  build-depends:       base >=4.11 && <4.12
                      , containers
                      , parsers
   hs-source-dirs:      src
@@ -28,7 +28,7 @@ library
 test-suite doctests
   type:                exitcode-stdio-1.0
   main-is:             DocTest.hs
-  build-depends:       base >= 4.10 && <4.11
+  build-depends:       base >= 4.11 && <4.12
                      , deterministic-parsing
                      , doctest
                      , QuickCheck

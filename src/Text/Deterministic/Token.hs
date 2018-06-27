@@ -1,7 +1,6 @@
 module Text.Deterministic.Token where
 
 import Data.Char
-import Data.Semigroup
 
 data Token s = Token
   { tokenSymbol :: !s
